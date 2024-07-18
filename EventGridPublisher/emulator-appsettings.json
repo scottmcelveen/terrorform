@@ -1,0 +1,7 @@
+{
+    "Topics": {
+      "topic1": [
+        "https://host.docker.internal:5000/Topic1Webhook"
+      ]
+    }
+  }
