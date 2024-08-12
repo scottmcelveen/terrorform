@@ -1,0 +1,69 @@
+name: terrorform
+
+services:
+  event-grid-publisher:
+    build:
+      context: ./EventGridPublisher
+      target: final
+    environment:
+      - EventGridNSEndpoint=http://event-grid-emulator:6500
+      - EventGridTopicKey=fakeAccessKey
+      - EventGridTopicName=topic1
+    ports:
+      - 8080:80
+    depends_on:
+      - event-grid-emulator
+  event-hubs-consumer:
+    build:
+      context: ./EventHubsConsumer
+      target: final
+    environment:
+      - EventHubConnectionString=Endpoint=sb://host.docker.internal;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+      - EventHubName=eh1
+    ports:
+      - 8081:80
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  cosmos-emulator:
+    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
+    ports:
+      - "8082:8081"
+      - "10250-10255:10250-10255"
+  event-grid-emulator:
+    image: workleap/eventgridemulator:latest
+    ports:
+      - "6500:6500"
+    volumes:
+      - "./EventGridPublisher/emulator-appsettings.json:/app/appsettings.json"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  event-hubs-emulator:
+    container_name: "eventhubs-emulator"
+    image: "mcr.microsoft.com/azure-messaging/eventhubs-emulator:1.2.4-preview-arm64"
+    volumes:
+      - "./EventGridPublisher/eventhubconfig.json:/Eventhubs_Emulator/ConfigFiles/Config.json"
+    ports:
+      - "5672:5672"
+    environment:
+      BLOB_SERVER: azurite
+      METADATA_SERVER: azurite
+      ACCEPT_EULA: Y
+    depends_on:
+      - azurite
+    networks:
+      eh-emulator:
+        aliases:
+          - "eventhubs-emulator"
+  azurite:
+    container_name: "azurite"
+    image: "mcr.microsoft.com/azure-storage/azurite:latest"
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    networks:
+      eh-emulator:
+        aliases:
+          - "azurite"
+networks:
+  eh-emulator:

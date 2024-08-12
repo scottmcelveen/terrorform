@@ -16,6 +16,7 @@ if(connectionString is null || eventHubName is null)
 }
 
 Console.WriteLine("Hello, World!");
+Console.WriteLine($"Connecting to {connectionString} and reading from {eventHubName}");
 
 
 var consumerGroup = EventHubConsumerClient.DefaultConsumerGroupName;
